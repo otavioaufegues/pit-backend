@@ -1,9 +1,35 @@
 const Category = require("../models/category");
+const Axis = require("../models/axis");
 
 exports.index = async function (req, res) {
   const categories = await Category.find();
 
   res.status(200).json({ categories });
+};
+
+exports.pitDropdownList = async function (req, res) {
+  const categories = await Category.find().select("description axis");
+  const axis = await Axis.find().select("ref name");
+
+  const dropdownList = categories.map((category) => {
+    const axisInfo = axis.find((item) => item._id === category.axis);
+
+    return {
+      value: category._id,
+      label: category.description,
+      parent: axisInfo.ref,
+    };
+  });
+
+  const axisList = axis.map((item) => {
+    return {
+      value: item.ref,
+      label: item.name,
+    };
+  });
+
+  const finalList = dropdownList.concat(axisList);
+  res.status(200).json(finalList);
 };
 
 exports.store = async (req, res) => {
@@ -61,8 +87,8 @@ exports.destroy = async function (req, res) {
 exports.createOrUpdate = async function (req, res) {
   try {
     const category = await Category.updateOne(
-      { _id: req.body._id }, 
-      { $set: { description: req.body.description } }, 
+      { _id: req.body._id },
+      { $set: { description: req.body.description } },
       { upsert: true }
     );
 
