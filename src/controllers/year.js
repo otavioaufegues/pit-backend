@@ -1,7 +1,20 @@
 const Year = require("../models/year");
 
 exports.index = async function (req, res) {
-  const years = await Year.find().sort({ year: 'desc'});
+  const currentYear = new Date().getFullYear();
+
+  const years = await Year.find().sort({ year: "desc" });
+
+  // Verifica se o ano atual não está presente nos resultados
+  const isCurrentYearPresent =
+    years.findIndex((year) => year.year === currentYear) !== -1;
+
+  if (!isCurrentYearPresent) {
+    const newYear = new Year({ year: currentYear });
+    await newYear.save();
+    years.unshift(newYear);
+  }
+
   res.status(200).json({ years });
 };
 
@@ -20,8 +33,7 @@ exports.show = async function (req, res) {
     const id = req.params.id;
     const year = await Year.findById(id);
 
-    if (!year)
-      return res.status(401).json({ message: "Year does not exist" });
+    if (!year) return res.status(401).json({ message: "Year does not exist" });
 
     res.status(200).json({ year });
   } catch (error) {
