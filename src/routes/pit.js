@@ -11,7 +11,7 @@ router.get("/", Pit.index);
 
 router.get("/year/:year", Pit.getPitsByYear);
 
-router.get("/departamento/:year", Pit.getDepatamentPit);
+router.get("/department/:year", Pit.getDepartamentPit);
 
 //STORE
 router.post(
@@ -40,5 +40,9 @@ router.put("/:id", Pit.update);
 router.delete("/:id", Pit.destroy);
 
 router.get("/anual/:year", Pit.showYearPit);
+
+router.get("/compare/department/:year", Pit.compareDepartmentPit);
+
+router.get("/compare/:year1/:year2", Pit.comparePit);
 
 module.exports = router;

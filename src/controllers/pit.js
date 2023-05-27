@@ -30,43 +30,10 @@ exports.getPitsByYear = async function (req, res) {
   res.status(200).json({ pits });
 };
 
-exports.getDepatamentPit = async function (req, res) {
+exports.getDepartamentPit = async function (req, res) {
   try {
     const year = req.params.year;
-    const axisLimit = await Axis.find().select(["ref", "limit"]);
-    let yearHours = {};
-    let resultPit = {};
-
-    //valores iniciais por eixo
-    axisLimit.map((axis) => {
-      yearHours[axis.ref] = 0;
-      resultPit[axis.ref] = 0;
-    });
-
-    //busca todos os pits do ano de todos professores ativos
-    const pit = await Pit.find({
-      dt_inicial: {
-        $gte: new Date(year, 0, 1),
-        $lt: new Date(year, 11, 31),
-      },
-    });
-
-    //buscar numero de professores ativos;
-    const teachers = await User.find({ isVerified: true });
-
-    axisLimit.map((axis) => {
-      let multiplier = 0;
-      pit.map((elem) => {
-        yearHours[axis.ref] +=
-          elem[axis.ref] *
-          (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
-        multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
-      });
-      const avgHours = (yearHours[axis.ref] * 100) / teachers.length;
-
-      resultPit[axis.ref] = (avgHours / (axis.limit * multiplier)).toFixed(2);
-    });
-
+    const resultPit = await getDepartmentPit(year);
     res.status(200).json({ resultPit });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -135,44 +102,14 @@ exports.show = async function (req, res) {
   }
 };
 
-// @route GET api/pit/{id}
+// @route GET api/pit/anual/{id}
 // @desc Returns a specific pit
 // @access Restrict
 exports.showYearPit = async function (req, res) {
   try {
     const year = req.params.year;
     const userId = req.user._id;
-    const axisLimit = await Axis.find().select(["ref", "limit"]);
-    let yearHours = {};
-    let resultPit = {};
-
-    axisLimit.map((axis) => {
-      yearHours[axis.ref] = 0;
-      resultPit[axis.ref] = 0;
-    });
-
-    const pit = await Pit.find({
-      user: userId,
-      dt_inicial: {
-        $gte: new Date(year, 0, 1),
-        $lt: new Date(year, 11, 31),
-      },
-    });
-
-    axisLimit.map((axis) => {
-      let multiplier = 0;
-      pit.map((elem) => {
-        yearHours[axis.ref] +=
-          elem[axis.ref] *
-          (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
-        multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
-      });
-
-      resultPit[axis.ref] = (
-        (yearHours[axis.ref] * 100) /
-        (axis.limit * multiplier)
-      ).toFixed(2);
-    });
+    const resultPit = await getAnualPit(year, userId);
 
     res.status(200).json({ resultPit });
   } catch (error) {
@@ -180,45 +117,127 @@ exports.showYearPit = async function (req, res) {
   }
 };
 
-// @route GET api/pit/{id}
+// @route GET api/pit/compare/{year1}/{year2}
 // @desc Returns a specific pit
 // @access Restrict
-exports.showDepartmentPit = async function (req, res) {
+exports.comparePit = async function (req, res) {
   try {
-    const year = req.params.year;
-    const axisLimit = await Axis.find().select(["ref", "limit"]);
-    let yearHours = {};
-    let resultPit = {};
+    const { year1, year2 } = req.params;
+    const userId = req.user._id;
 
-    axisLimit.map((axis) => {
-      yearHours[axis.ref] = 0;
-      resultPit[axis.ref] = 0;
-    });
+    const [resultPitYear1, resultPitYear2] = await Promise.all([
+      getAnualPit(year1, userId),
+      getAnualPit(year2, userId),
+    ]);
 
-    const pit = await Pit.find({
-      dt_inicial: {
-        $gte: new Date(year, 0, 1),
-        $lt: new Date(year, 11, 31),
-      },
-    });
-
-    axisLimit.map((axis) => {
-      let multiplier = 0;
-      pit.map((elem) => {
-        yearHours[axis.ref] +=
-          elem[axis.ref] *
-          (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
-        multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
-      });
-
-      resultPit[axis.ref] = (
-        (yearHours[axis.ref] * 100) /
-        (axis.limit * multiplier)
-      ).toFixed(2);
-    });
+    const resultPit = [];
+    resultPit.push(resultPitYear1);
+    resultPit.push(resultPitYear2);
 
     res.status(200).json({ resultPit });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// @route GET api/pit/compare/department/{year2}
+// @desc Returns a specific pit
+// @access Restrict
+exports.compareDepartmentPit = async function (req, res) {
+  try {
+    const { year } = req.params;
+    const userId = req.user._id;
+
+    const [resultPitYear1, resultPitYear2] = await Promise.all([
+      getAnualPit(year, userId),
+      getAnualPit(year),
+    ]);
+
+    const resultPit = [];
+    resultPit.push(resultPitYear1);
+    resultPit.push(resultPitYear2);
+
+    res.status(200).json({ resultPit });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAnualPit = async (year, userId) => {
+  const axisLimit = await Axis.find().select(["ref", "limit"]);
+  let yearHours = {};
+  let resultPit = {};
+  axisLimit.map((axis) => {
+    yearHours[axis.ref] = 0;
+    resultPit[axis.ref] = 0;
+  });
+
+  let pitQuery = {
+    dt_inicial: {
+      $gte: new Date(year, 0, 1),
+      $lt: new Date(year, 11, 31),
+    },
+  };
+
+  if (userId) {
+    pitQuery.user = userId;
+  }
+
+  const pit = await Pit.find(pitQuery);
+
+  axisLimit.map((axis) => {
+    let multiplier = 0;
+    pit.map((elem) => {
+      yearHours[axis.ref] +=
+        elem[axis.ref] *
+        (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
+      multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
+    });
+    const hoursNumber =
+      axis.limit *
+      (((yearHours[axis.ref] * 100) / (axis.limit * multiplier)).toFixed(2) /
+        100);
+    resultPit[axis.ref] = hoursNumber ? hoursNumber : 0;
+  });
+
+  return resultPit;
+};
+
+const getDepartmentPit = async (year) => {
+  //buscar numero de professores ativos;
+  const teachers = await User.find({ isVerified: true });
+
+  const axisLimit = await Axis.find().select(["ref", "limit"]);
+  let yearHours = {};
+  let resultPit = {};
+
+  //valores iniciais por eixo
+  axisLimit.map((axis) => {
+    yearHours[axis.ref] = 0;
+    resultPit[axis.ref] = 0;
+  });
+
+  //busca todos os pits do ano de todos professores ativos
+  const pit = await Pit.find({
+    dt_inicial: {
+      $gte: new Date(year, 0, 1),
+      $lt: new Date(year, 11, 31),
+    },
+  });
+
+  axisLimit.map((axis) => {
+    let multiplier = 0;
+    pit.map((elem) => {
+      yearHours[axis.ref] +=
+        elem[axis.ref] *
+        (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
+      multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
+    });
+    const avgHours = (yearHours[axis.ref] * 100) / teachers.length;
+    const hoursNumber =
+      axis.limit * ((avgHours / (axis.limit * multiplier)).toFixed(2) / 100);
+    resultPit[axis.ref] = hoursNumber ? hoursNumber : 0;
+  });
+
+  return resultPit;
 };
