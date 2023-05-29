@@ -12,7 +12,7 @@ const ActivitySchema = new mongoose.Schema(
 
     category: { type: mongoose.Schema.Types.Number, ref: "Category" },
 
-    year: { type: mongoose.Schema.Types.Number, ref: "Year" },
+    year: { type: mongoose.Schema.Types.ObjectId, ref: "Year" },
 
     description: {
       type: String,
