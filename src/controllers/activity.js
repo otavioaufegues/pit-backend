@@ -37,7 +37,7 @@ exports.store = async (req, res) => {
     const activity = await Activity.create({ ...req.body, user: _id });
     const details = req.body.newData;
     // activity.department = 1;
-    
+
     activity.details = "";
     details.map(function (val) {
       if (val.key != "") activity.details.set(val.key, val.value);
@@ -122,6 +122,8 @@ exports.getActivitiesByCategory = async function (req, res) {
       .populate("year")
       .populate("category")
       .populate("department"); //remover
+
+      console.log("oi", categories);
 
     categories.forEach((category) => {
       if (!data.has(category)) data.set(category, []);

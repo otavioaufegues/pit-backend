@@ -2,20 +2,19 @@ const mongoose = require("mongoose");
 
 const CategorySchema = new mongoose.Schema(
   {
-    _id: Number,
-
     description: {
       type: String,
       required: "Description is required",
     },
 
-    axis: { type: mongoose.Schema.Types.Number, ref: "Axis" },
+    axis: mongoose.Schema.Types.ObjectId,
+
+    limitHours: mongoose.Schema.Types.Number,
 
     details: {
       type: Map,
       of: String,
     },
-    
   },
   { timestamps: true }
 );

@@ -30,7 +30,6 @@ router.post(
       check("lastName").not().isEmpty().withMessage("You last name is required"),
       check("regime").not().isEmpty().withMessage("Your work regime is required"),
     ],
-  validate,
   User.store
 );
 

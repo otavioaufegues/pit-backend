@@ -8,9 +8,9 @@ const ActivitySchema = new mongoose.Schema(
       required: true,
     },
 
-    department: { type: mongoose.Schema.Types.Number, ref: "Department" },
+    department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
 
-    category: { type: mongoose.Schema.Types.Number, ref: "Category" },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
 
     year: { type: mongoose.Schema.Types.ObjectId, ref: "Year" },
 

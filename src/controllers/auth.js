@@ -39,6 +39,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
+    console.log(user);
 
     if (!user)
       return res.status(401).json({
@@ -50,7 +51,7 @@ exports.login = async (req, res) => {
 
     //validate password
     if (!user.comparePassword(password))
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Senha ou email inválidos" });
 
     // Make sure the user has been verified
     if (!user.isVerified)
