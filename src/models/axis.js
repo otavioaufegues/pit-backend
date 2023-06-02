@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 const AxisSchema = new mongoose.Schema(
   {
-    _id: Number,
     name: {
       type: String,
       required: "Name is required",

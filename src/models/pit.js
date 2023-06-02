@@ -34,8 +34,8 @@ const PitSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  year: { type: mongoose.Schema.Types.Number, ref: "Year" },
-  activities: [{ type: mongoose.Schema.Types.Number, ref: "Category" }],
+  year: { type: mongoose.Schema.Types.ObjectId, ref: "Year" },
+  activities: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
   description: {
     type: String,
   },

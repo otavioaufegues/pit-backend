@@ -7,7 +7,7 @@ const CategorySchema = new mongoose.Schema(
       required: "Description is required",
     },
 
-    axis: mongoose.Schema.Types.ObjectId,
+    axis: { type: mongoose.Schema.Types.ObjectId, ref: "Axis" },
 
     limitHours: mongoose.Schema.Types.Number,
 

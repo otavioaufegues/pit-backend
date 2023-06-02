@@ -2,12 +2,11 @@ const mongoose = require("mongoose");
 
 const DepartmentSchema = new mongoose.Schema(
   {
-    _id: Number,
     name: {
       type: String,
       required: "Name is required",
     },
-    year: { type: mongoose.Schema.Types.Number, ref: "Year" },
+    year: { type: mongoose.Schema.Types.ObjectId, ref: "Year" },
   },
   { timestamps: true }
 );

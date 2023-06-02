@@ -37,7 +37,7 @@ const UserSchema = new mongoose.Schema(
       max: 100,
     },
 
-    department: { type: mongoose.Schema.Types.Number, ref: "Department" },
+    department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
 
     siape: {
       type: String,
