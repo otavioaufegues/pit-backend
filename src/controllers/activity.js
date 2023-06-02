@@ -663,12 +663,8 @@ exports.updateDetailsActivity = async function (req, res) {
   const details = req.body;
 
   const activity = await Activity.findById(activityId).exec();
-
-  activity.details = "";
-  details.map(function (val) {
-    if (val.key != "") activity.details.set(val.key, val.value);
-  });
-  activity.save();
+  activity.details = details;
+  await activity.save();
 
   res.status(200).json({ activity });
 };
