@@ -123,19 +123,14 @@ exports.getActivitiesByCategory = async function (req, res) {
       .populate("category")
       .populate("department"); //remover
 
-      console.log("oi", categories);
-
     categories.forEach((category) => {
       if (!data.has(category)) data.set(category, []);
-
       activities.forEach((activity) => {
-        if (category._id === activity.category._id) {
+        if (category._id.equals(activity.category._id)) {
           data.get(category).push({
             _id: activity._id,
             description: activity.description,
-            details: activity.details, //detalhes atividade (seeder)
-            // department: activity.department //remover
-            // year: activity.year
+            details: activity.details,
           });
         }
       });
@@ -183,7 +178,7 @@ exports.getDetailsEvolution = async function (req, res) {
       if (!data.has(category)) data.set(category, []);
 
       activities.forEach((activity) => {
-        if (category._id === activity.category._id) {
+        if (category._id.equals(activity.category._id)) {
           data.get(category).push({
             _id: activity._id,
             description: activity.description,

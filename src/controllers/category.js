@@ -12,7 +12,7 @@ exports.pitDropdownList = async function (req, res) {
   const axis = await Axis.find().select("ref name");
 
   const dropdownList = categories.map((category) => {
-    const axisInfo = axis.find((item) => item._id === category.axis);
+    const axisInfo = axis.find((item) => item._id.equals(category.axis));
 
     return {
       value: category._id,

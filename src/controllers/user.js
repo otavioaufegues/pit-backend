@@ -144,43 +144,6 @@ exports.destroy = async function (req, res) {
   }
 };
 
-// exports.getUsersByDepartment = async function (req, res) {
-//   try {
-//     const { yearNumber } = req.params;
-//     const data = new Map();
-//     const year = await Year.findOne({ year: yearNumber });
-//     const departments = await Department.find({ year: year._id });
-
-//     const users = await User.find().populate("department");
-
-//     departments.forEach((department) => {
-//       if (!data.has(department)) data.set(department, []);
-
-//       users.forEach((user) => {
-//         if (department._id === user.department._id)
-//           data.get(department).push({
-//             _id: user._id,
-//             firstName: user.firstName,
-//             username: user.username
-//           });
-//       });
-//     });
-
-//     const usersByDepartment = [];
-//     data.forEach((user, department) => {
-//       usersByDepartment.push({
-//         _id: department._id,
-//         name: department.name,
-//         users: user,
-//       });
-//     });
-
-//     res.status(200).json({ usersByDepartment });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 exports.getUsersByDepartment = async function (req, res) {
   try {
     const { yearNumber } = req.params;
@@ -195,7 +158,7 @@ exports.getUsersByDepartment = async function (req, res) {
       if (!data.has(department)) data.set(department, []);
 
       activities.forEach((activity) => {
-        if (department._id === activity.user.department) {
+        if (department._id.equals(activity.user.department)) {
           data.get(department).push({
             _id: activity.user._id,
             firstName: activity.user.firstName,
@@ -206,7 +169,6 @@ exports.getUsersByDepartment = async function (req, res) {
       });
     });
 
-    console.log(activities);
     const usersByDepartment = [];
     data.forEach((user, department) => {
       let userArr = user
