@@ -21,6 +21,18 @@ exports.pitDropdownList = async function (req, res) {
     };
   });
 
+  dropdownList.sort((a, b) => {
+    const labelA = a.label.toUpperCase();
+    const labelB = b.label.toUpperCase();
+    if (labelA > labelB) {
+      return -1;
+    }
+    if (labelA < labelB) {
+      return 1;
+    }
+    return 0;
+  });
+
   const axisList = axis.map((item) => {
     return {
       value: item.ref,
@@ -48,7 +60,7 @@ exports.show = async function (req, res) {
     const category = await Category.findById(id);
 
     if (!category)
-      return res.status(401).json({ message: "Category does not exist" });
+      return res.status(401).json({ message: "Categoria não existe!" });
 
     res.status(200).json({ category });
   } catch (error) {

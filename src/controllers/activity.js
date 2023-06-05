@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Activity = require("../models/activity");
 const Category = require("../models/category");
 const Year = require("../models/year");
@@ -112,48 +113,66 @@ exports.destroy = async function (req, res) {
 exports.getActivitiesByCategory = async function (req, res) {
   try {
     const { yearNumber } = req.params;
-    const userId = req.user._id;
-    const data = new Map();
-    const categories = await Category.find().populate("axis");
+    const { _id: userId } = req.user;
     const year = await Year.findOne({ year: yearNumber });
 
-    const activities = await Activity.find({ year: year._id, user: userId })
-      .populate("user")
-      .populate("year")
-      .populate("category")
-      .populate("department"); //remover
+    const pipeline = [
+      {
+        $lookup: {
+          from: "activities",
+          let: { categoryId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$category", "$$categoryId"] }],
+                },
+              },
+            },
+          ],
+          as: "activities",
+        },
+      },
+      {
+        $match: {
+          activities: { $ne: [] },
+        },
+      },
+      {
+        $lookup: {
+          from: "axes",
+          localField: "axis",
+          foreignField: "_id",
+          as: "axis",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          description: 1,
+          axis: { $arrayElemAt: ["$axis", 0] },
+          activities: 1,
+        },
+      },
+    ];
 
-    categories.forEach((category) => {
-      if (!data.has(category)) data.set(category, []);
-      activities.forEach((activity) => {
-        if (category._id.equals(activity.category._id)) {
-          data.get(category).push({
-            _id: activity._id,
-            description: activity.description,
-            details: activity.details,
-          });
-        }
+    if (year) {
+      pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
+        $eq: ["$year", mongoose.Types.ObjectId(year._id)],
       });
-    });
+    }
 
-    const activitiesByCategory = [];
-    data.forEach((activity, category) => {
-      activitiesByCategory.push({
-        _id: category._id,
-        description: category.description,
-        activities: activity,
-        axis: category.axis._id, //TODO: analisar se algum lugar utiliza, caso contrario remover
-        axisObject: category.axis,
-        axisIcon: category.axis.icon,
-        details: category.details, //detalhes categoria
+    if (userId) {
+      pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
+        $eq: ["$user", mongoose.Types.ObjectId(userId)],
       });
-    });
+    }
 
-    activitiesByCategory.sort(function (a, b) {
-      return a.axis < b.axis ? -1 : a.axis > b.axis ? 1 : 0;
-    });
+    const activitiesByCategory = await Category.aggregate(pipeline);
 
-    res.status(200).json({ activitiesByCategory });
+    res.json({ activitiesByCategory });
+
+    res.status(200).json({ categories });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
