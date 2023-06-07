@@ -41,4 +41,44 @@ const PitSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Pit", PitSchema);
+const Pit = mongoose.model("Pit", PitSchema);
+
+Pit.getAnualPitActivities = async (year, userId) => {
+  year = 2021;
+  let pitQuery = {
+    dt_inicial: {
+      $gte: new Date(year, 0, 1),
+      $lt: new Date(year, 11, 31),
+    },
+  };
+
+  if (userId) {
+    pitQuery.user = userId;
+  }
+
+  const activities = await Pit.aggregate([
+    // { $match: pitQuery },
+    { $unwind: "$activities" },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "activities",
+        foreignField: "_id",
+        as: "activityData",
+      },
+    },
+    { $unwind: "$activityData" },
+    {
+      $group: {
+        _id: "$activityData._id",
+        activityData: { $first: "$activityData" },
+      },
+    },
+    { $project: { _id: 0, activity: "$activityData" } },
+    { $sort: { "activity.description": 1 } },
+  ]);
+
+  return activities.map((item) => item.activity);
+};
+
+module.exports = Pit;

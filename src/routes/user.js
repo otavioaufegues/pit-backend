@@ -9,10 +9,9 @@ const router = express.Router();
 
 const upload = multer().single("profileImage");
 
-router.get(
-  "/getUsersByDepartment/:yearNumber",
-  User.getUsersByDepartment
-);
+router.get("/getUsersByDepartment/:yearNumber", User.getUsersByDepartment);
+
+router.get("/getResult/:userId", User.getResult);
 
 //INDEX
 router.get("/", User.index);
@@ -27,9 +26,9 @@ router.post(
       .not()
       .isEmpty()
       .withMessage("You first name is required"),
-      check("lastName").not().isEmpty().withMessage("You last name is required"),
-      check("regime").not().isEmpty().withMessage("Your work regime is required"),
-    ],
+    check("lastName").not().isEmpty().withMessage("You last name is required"),
+    check("regime").not().isEmpty().withMessage("Your work regime is required"),
+  ],
   User.store
 );
 
