@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Category = require("../models/category");
 
 const ActivitySchema = new mongoose.Schema(
   {
@@ -28,5 +29,64 @@ const ActivitySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+const Activity = mongoose.model("Activity", ActivitySchema);
 
-module.exports = mongoose.model("Activity", ActivitySchema);
+Activity.getActivities = async (year, userId) => {
+  const pipeline = [
+    {
+      $lookup: {
+        from: "activities",
+        let: { categoryId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ["$category", "$$categoryId"] }],
+              },
+            },
+          },
+        ],
+        as: "activities",
+      },
+    },
+    {
+      $match: {
+        activities: { $ne: [] },
+      },
+    },
+    {
+      $lookup: {
+        from: "axes",
+        localField: "axis",
+        foreignField: "_id",
+        as: "axis",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        description: 1,
+        axis: { $arrayElemAt: ["$axis", 0] },
+        activities: 1,
+      },
+    },
+  ];
+
+  if (year) {
+    pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
+      $eq: ["$year", mongoose.Types.ObjectId(year._id)],
+    });
+  }
+
+  if (userId) {
+    pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
+      $eq: ["$user", mongoose.Types.ObjectId(userId)],
+    });
+  }
+
+  const activitiesByCategory = await Category.aggregate(pipeline);
+
+  return activitiesByCategory;
+};
+
+module.exports = Activity;

@@ -116,63 +116,9 @@ exports.getActivitiesByCategory = async function (req, res) {
     const { _id: userId } = req.user;
     const year = await Year.findOne({ year: yearNumber });
 
-    const pipeline = [
-      {
-        $lookup: {
-          from: "activities",
-          let: { categoryId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ["$category", "$$categoryId"] }],
-                },
-              },
-            },
-          ],
-          as: "activities",
-        },
-      },
-      {
-        $match: {
-          activities: { $ne: [] },
-        },
-      },
-      {
-        $lookup: {
-          from: "axes",
-          localField: "axis",
-          foreignField: "_id",
-          as: "axis",
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          description: 1,
-          axis: { $arrayElemAt: ["$axis", 0] },
-          activities: 1,
-        },
-      },
-    ];
+    const activitiesByCategory = await Activity.getActivities(year, userId);
 
-    if (year) {
-      pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
-        $eq: ["$year", mongoose.Types.ObjectId(year._id)],
-      });
-    }
-
-    if (userId) {
-      pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
-        $eq: ["$user", mongoose.Types.ObjectId(userId)],
-      });
-    }
-
-    const activitiesByCategory = await Category.aggregate(pipeline);
-
-    res.json({ activitiesByCategory });
-
-    res.status(200).json({ categories });
+    res.status(200).json({ activitiesByCategory });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
