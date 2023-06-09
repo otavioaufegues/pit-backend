@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ObjectId } = require("mongodb");
 
 const PitSchema = new mongoose.Schema({
   user: {
@@ -43,21 +44,10 @@ const PitSchema = new mongoose.Schema({
 
 const Pit = mongoose.model("Pit", PitSchema);
 
-Pit.getAnualPitActivities = async (year, userId) => {
-  year = 2021;
-  let pitQuery = {
-    dt_inicial: {
-      $gte: new Date(year, 0, 1),
-      $lt: new Date(year, 11, 31),
-    },
-  };
-
-  if (userId) {
-    pitQuery.user = userId;
-  }
-
+Pit.getAnualPitActivities = async (yearId, userId) => {
+  const pitQuery = { user: ObjectId(userId), year: ObjectId(yearId) };
   const activities = await Pit.aggregate([
-    // { $match: pitQuery },
+    { $match: pitQuery },
     { $unwind: "$activities" },
     {
       $lookup: {
@@ -69,12 +59,38 @@ Pit.getAnualPitActivities = async (year, userId) => {
     },
     { $unwind: "$activityData" },
     {
+      $lookup: {
+        from: "axes",
+        localField: "activityData.axis",
+        foreignField: "_id",
+        as: "axisData",
+      },
+    },
+    { $unwind: "$axisData" },
+    {
       $group: {
         _id: "$activityData._id",
         activityData: { $first: "$activityData" },
+        axisData: { $first: "$axisData" },
       },
     },
-    { $project: { _id: 0, activity: "$activityData" } },
+    {
+      $project: {
+        _id: 0,
+        activity: {
+          _id: "$activityData._id",
+          description: "$activityData.description",
+          axis: "$axisData",
+          limitHours: "$activityData.limitHours",
+          details: "$activityData.details",
+          __v: "$activityData.__v",
+          createdAt: "$activityData.createdAt",
+          updatedAt: "$activityData.updatedAt",
+          status: "$activityData.status",
+        },
+      },
+    },
+
     { $sort: { "activity.description": 1 } },
   ]);
 

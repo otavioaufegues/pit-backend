@@ -31,7 +31,7 @@ const ActivitySchema = new mongoose.Schema(
 );
 const Activity = mongoose.model("Activity", ActivitySchema);
 
-Activity.getActivities = async (year, userId) => {
+Activity.getActivities = async (yearId, userId) => {
   const pipeline = [
     {
       $lookup: {
@@ -72,9 +72,9 @@ Activity.getActivities = async (year, userId) => {
     },
   ];
 
-  if (year) {
+  if (yearId) {
     pipeline[0].$lookup.pipeline[0].$match["$expr"].$and.push({
-      $eq: ["$year", mongoose.Types.ObjectId(year._id)],
+      $eq: ["$year", mongoose.Types.ObjectId(yearId)],
     });
   }
 

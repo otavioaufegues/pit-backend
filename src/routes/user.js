@@ -11,7 +11,7 @@ const upload = multer().single("profileImage");
 
 router.get("/getUsersByDepartment/:yearNumber", User.getUsersByDepartment);
 
-router.get("/getResult/:userId", User.getResult);
+router.get("/getResult/:userId/:yearId", User.getResult);
 
 //INDEX
 router.get("/", User.index);

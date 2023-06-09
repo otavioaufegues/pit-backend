@@ -193,17 +193,10 @@ exports.getUsersByDepartment = async function (req, res) {
 
 exports.getResult = async function (req, res) {
   try {
-    const { yearNumber } = req.params;
-    const { _id: userId } = req.user;
-    const year = await Year.findOne({ year: yearNumber });
+    const { userId, yearId } = req.params;
 
-    const pitCategories = await Pit.getAnualPitActivities(yearNumber, userId);
-    const activitiesByCategory = await Activity.getActivities(
-      yearNumber,
-      userId
-    );
-
-    // // Obtenha os IDs de categoria de cada variável
+    const pitCategories = await Pit.getAnualPitActivities(yearId, userId);
+    const activitiesByCategory = await Activity.getActivities(yearId, userId);
     const pitCategoryIds = pitCategories.map((category) => category._id);
     const activitiesCategoryIds = activitiesByCategory.map(
       (category) => category._id
@@ -211,15 +204,18 @@ exports.getResult = async function (req, res) {
 
     const result = pitCategories.map((pitCategory) => {
       if (activitiesCategoryIds.some((item) => item.equals(pitCategory._id))) {
+        pitCategory.status = "miss";
         return pitCategory;
       } else {
-        return "Categoria Ausente";
+        pitCategory.status = "ok";
+        return pitCategory;
       }
     });
 
     activitiesByCategory.forEach((category) => {
       if (!pitCategoryIds.some((item) => item.equals(category._id))) {
-        result.push("Categoria Excedente");
+        category.status = "plus";
+        result.push(category);
       }
     });
 
