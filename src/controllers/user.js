@@ -224,3 +224,12 @@ exports.getResult = async function (req, res) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @route GET
+// @desc Returns all active teachers users
+exports.getTeachers = async function (req, res) {
+  const teachers = await User.find({ isActive: true })
+    .populate("department")
+    .sort({ name: 1 });
+  res.status(200).json({ teachers });
+};

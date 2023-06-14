@@ -13,6 +13,8 @@ router.get("/getUsersByDepartment/:yearNumber", User.getUsersByDepartment);
 
 router.get("/getResult/:userId/:yearId", User.getResult);
 
+router.get("/getTeachers", User.getTeachers);
+
 //INDEX
 router.get("/", User.index);
 

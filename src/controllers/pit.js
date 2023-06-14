@@ -18,7 +18,7 @@ exports.index = async function (req, res) {
 // @access Restrict
 exports.getPitsByYear = async function (req, res) {
   const userId = req.user._id;
-  const year = req.params.year;
+  const { year } = req.params;
   const pits = await Pit.find({
     user: userId,
     dt_inicial: {

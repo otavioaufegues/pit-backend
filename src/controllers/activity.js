@@ -116,7 +116,7 @@ exports.getActivitiesByCategory = async function (req, res) {
     const { _id: userId } = req.user;
     const year = await Year.findOne({ year: yearNumber });
 
-    const activitiesByCategory = await Activity.getActivities(year, userId);
+    const activitiesByCategory = await Activity.getActivities(year._id, userId);
 
     res.status(200).json({ activitiesByCategory });
   } catch (error) {
