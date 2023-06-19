@@ -6,6 +6,7 @@ const category = require("./category");
 const year = require("./year");
 const department = require("./department");
 const axis = require("./axis");
+const message = require("./message");
 
 const authenticate = require("../middlewares/authenticate");
 
@@ -24,5 +25,6 @@ module.exports = (app) => {
   app.use("/api/category", authenticate, category);
   app.use("/api/year", authenticate, year);
   app.use("/api/department", authenticate, department);
+  app.use("/api/message", authenticate, message);
   app.use("/api/axis", axis);
 };
