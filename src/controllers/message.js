@@ -15,7 +15,9 @@ exports.getUserMessages = async function (req, res) {
         { $or: [{ sender: user._id }, { receiver: user._id }] },
         { year: yearId },
       ],
-    });
+    })
+      .populate("sender")
+      .populate("receiver");
 
     res.status(200).json({ messages: messages });
   } catch (error) {
