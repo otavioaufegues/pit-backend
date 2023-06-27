@@ -7,6 +7,7 @@ const DepartmentSchema = new mongoose.Schema(
       required: "Name is required",
     },
     year: { type: mongoose.Schema.Types.ObjectId, ref: "Year" },
+    coordinator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

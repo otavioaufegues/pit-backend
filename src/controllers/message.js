@@ -3,16 +3,20 @@ const User = require("../models/user");
 
 exports.getUserMessages = async function (req, res) {
   const { user } = req;
-  const { yearId } = req.params;
+  const { yearId, userId } = req.params;
 
   try {
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
-
     const messages = await Message.find({
       $and: [
-        { $or: [{ sender: user._id }, { receiver: user._id }] },
+        {
+          $or: [
+            { sender: user._id, receiver: userId },
+            { sender: userId, receiver: user._id },
+          ],
+        },
         { year: yearId },
       ],
     })
