@@ -197,6 +197,7 @@ exports.getResult = async function (req, res) {
 
     const pitCategories = await Pit.getAnualPitActivities(yearId, userId);
     const activitiesByCategory = await Activity.getActivities(yearId, userId);
+
     const pitCategoryIds = pitCategories.map((category) => category._id);
     const activitiesCategoryIds = activitiesByCategory.map(
       (category) => category._id
@@ -204,10 +205,20 @@ exports.getResult = async function (req, res) {
 
     const result = pitCategories.map((pitCategory) => {
       if (activitiesCategoryIds.some((item) => item.equals(pitCategory._id))) {
-        pitCategory.status = "miss";
+        pitCategory.status = "ok";
+        pitCategory.activities = [];
+
+        const matchingActivities = activitiesByCategory.find((activity) =>
+          activity._id.equals(pitCategory._id)
+        );
+
+        if (matchingActivities) {
+          pitCategory.activities = matchingActivities.activities;
+        }
+
         return pitCategory;
       } else {
-        pitCategory.status = "ok";
+        pitCategory.status = "miss";
         return pitCategory;
       }
     });
