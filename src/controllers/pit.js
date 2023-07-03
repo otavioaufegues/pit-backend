@@ -1,7 +1,8 @@
+const mongoose = require("mongoose");
 const Axis = require("../models/axis");
 const Pit = require("../models/pit");
-const Year = require("../models/year");
 const User = require("../models/user");
+const Activity = require("../models/activity");
 
 // @route GET admin/pit
 // @desc Returns all pit
@@ -25,14 +26,26 @@ exports.getPitsByYear = async function (req, res) {
       $gte: new Date(year + "-01-01T00:00:00.000Z"),
       $lt: new Date(year + "-12-31T23:59:59.000Z"),
     },
-  }).populate("user");
+  })
+    .populate("user")
+    .populate("activities");
 
-  res.status(200).json({ pits });
+  const allActivitiesSet = new Set();
+
+  pits.forEach((pit) => {
+    pit.activities.forEach((activity) => {
+      allActivitiesSet.add(activity);
+    });
+  });
+
+  const allActivities = Array.from(allActivitiesSet);
+
+  res.status(200).json({ pits, allActivities });
 };
 
 exports.getDepartamentPit = async function (req, res) {
   try {
-    const year = req.params.year;
+    const { year } = req.params;
     const resultPit = await getDepartmentPit(year);
     res.status(200).json({ resultPit });
   } catch (error) {
@@ -122,8 +135,7 @@ exports.showYearPit = async function (req, res) {
 // @access Restrict
 exports.comparePit = async function (req, res) {
   try {
-    const { year1, year2 } = req.params;
-    const userId = req.user._id;
+    const { userId, year1, year2 } = req.params;
 
     const [resultPitYear1, resultPitYear2] = await Promise.all([
       getAnualPit(year1, userId),
@@ -140,17 +152,16 @@ exports.comparePit = async function (req, res) {
   }
 };
 
-// @route GET api/pit/compare/department/{year2}
+// @route GET api/pit/compare/department/{userId}/{yearId}
 // @desc Returns a specific pit
 // @access Restrict
 exports.compareDepartmentPit = async function (req, res) {
   try {
-    const { year } = req.params;
-    const userId = req.user._id;
+    const { userId, year } = req.params;
 
     const [resultPitYear1, resultPitYear2] = await Promise.all([
       getAnualPit(year, userId),
-      getAnualPit(year),
+      getDepartmentPit(year),
     ]);
 
     const resultPit = [];
@@ -233,9 +244,10 @@ const getDepartmentPit = async (year) => {
         (elem.dt_final.getMonth() - elem.dt_inicial.getMonth());
       multiplier += elem.dt_final.getMonth() - elem.dt_inicial.getMonth();
     });
-    const avgHours = (yearHours[axis.ref] * 100) / teachers.length;
     const hoursNumber =
-      axis.limit * ((avgHours / (axis.limit * multiplier)).toFixed(2) / 100);
+      axis.limit *
+      (((yearHours[axis.ref] * 100) / (axis.limit * multiplier)).toFixed(2) /
+        100);
     resultPit[axis.ref] = hoursNumber ? hoursNumber : 0;
   });
 
