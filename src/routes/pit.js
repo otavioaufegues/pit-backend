@@ -41,8 +41,8 @@ router.delete("/:id", Pit.destroy);
 
 router.get("/anual/:year", Pit.showYearPit);
 
-router.get("/compare/department/:year", Pit.compareDepartmentPit);
+router.get("/compare/department/:userId/:year", Pit.compareDepartmentPit);
 
-router.get("/compare/:year1/:year2", Pit.comparePit);
+router.get("/compare/:userId/:year1/:year2", Pit.comparePit);
 
 module.exports = router;
